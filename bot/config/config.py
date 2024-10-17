@@ -20,6 +20,8 @@ class Settings(BaseSettings):
     AUTO_CLAIM_COMBO: bool = True
     AUTO_RANK_UPGRADE: bool = True
 
+    USE_PROXY: bool = False
+
     SLEEP_TIME: list[int] = [21000, 32000]
 
 settings = Settings()

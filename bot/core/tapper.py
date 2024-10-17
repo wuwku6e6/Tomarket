@@ -311,17 +311,18 @@ class Tapper:
 
         await self.init()
 
-        if not self.proxy:
-            logger.error(f"{self.session_name} | Proxy is not set. Aborting operation.")
-            return
 
         proxy_conn = ProxyConnector().from_url(self.proxy) if self.proxy else None
         http_client = aiohttp.ClientSession(headers=self.headers, connector=proxy_conn)
         connection_manager.add(http_client)
 
-        if not await self.check_proxy(http_client):
-            logger.error(f"{self.session_name} | Proxy check failed. Aborting operation.")
-            return
+        if settings.USE_PROXY:
+            if not self.proxy:
+                logger.error(f"{self.session_name} | Proxy is not set. Aborting operation.")
+                return
+            if not await self.check_proxy(http_client):
+                logger.error(f"{self.session_name} | Proxy check failed. Aborting operation.")
+                return
 
         end_farming_dt = 0
         token_expiration = 0
@@ -339,10 +340,6 @@ class Tapper:
                     proxy_conn = ProxyConnector().from_url(self.proxy) if self.proxy else None
                     http_client = aiohttp.ClientSession(headers=self.headers, connector=proxy_conn)
                     connection_manager.add(http_client)
-
-                    if not self.proxy:
-                        logger.error(f"{self.session_name} | Proxy is not set. Aborting")
-                        return
 
                 current_time = time()
                 if current_time >= token_expiration:
@@ -684,9 +681,9 @@ class Tapper:
                     f"{self.session_name} | Sleep before wake up <yellow>{hours} hours</yellow> and <yellow>{minutes} minutes</yellow>")
                 await asyncio.sleep(sleep_time)
 
-async def run_tapper(tg_client: Client, proxy: str):
+async def run_tapper(tg_client: Client, proxy: str | None):
     session_name = tg_client.name
-    if not proxy:
+    if settings.USE_PROXY and not proxy:
         logger.error(f"{session_name} | No proxy found for this session")
         return
     try:
